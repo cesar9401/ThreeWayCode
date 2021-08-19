@@ -1,0 +1,67 @@
+
+package com.cesar31.threewaycode.parser;
+import com.cesar31.threewaycode.instruction.*;
+
+import java_cup.runtime.Symbol;
+
+import java.util.ArrayList;
+import java.util.List;
+
+class ThreeParser;
+
+parser code {:
+	public ThreeParser(ThreeLex lex) {
+		super(lex);
+	}
+
+	public void syntax_error(Symbol cur_token) {
+		// List<String> expected = new ArrayList<>();
+		List<Integer> tokens = expected_token_ids();
+
+		// System.out.printf("Se encontro: %s -> (%s), linea %d columna %d, se esperaba -> ", cur_token.value, symbl_name_from_id(cur_token.sym), cur_token.left, cur_token.right);
+		for(Integer i : tokens) {
+			// expected.add(symbl_name_from_id(i));
+			System.out.printf("%s, ", symbl_name_from_id(i));
+		}
+		System.out.println("");
+	}
+:}
+
+terminal ID, INTEGER, PLUS, MINUS, TIMES, DIVIDE, LPAREN, RPAREN, SEMI, EQUAL, ERROR;
+non terminal Operation a, b, c, d;
+non terminal Assignment assign;
+non terminal List<Assignment> input;
+
+input ::=
+			input:list assign:a
+				{: RESULT = list; RESULT.add(a); :}
+			| assign:a
+				{: RESULT = new ArrayList<>(); RESULT.add(a); :}
+			;
+
+assign ::=
+			ID:id EQUAL a:operation SEMI
+				{: RESULT = new Assignment(id.toString(), operation); :}
+			;
+
+a ::=
+			a:l PLUS b:r {: RESULT = new Operation("plus", l, r); :}
+			| a:l MINUS b:r {: RESULT = new Operation("minus", l, r); :}
+			| b:l {: RESULT = l; :}
+			;
+
+b ::=
+			b:l TIMES c:r {: RESULT = new Operation("times", l ,r); :}
+			| b:l DIVIDE c:r {: RESULT = new Operation("divide", l, r); :}
+			| c:l {: RESULT = l; :}
+			;
+
+c ::=
+			MINUS d:l {: RESULT = new Operation("uminus", l); :}
+			| d:l {: RESULT = l; :}
+			;
+
+d ::=		INTEGER:integer {: RESULT = new Operation("integer", integer.toString()); :}
+			| ID:id {: RESULT = new Operation("id", id.toString()); :}
+			| LPAREN a:op RPAREN {: RESULT = op; :}
+			;
